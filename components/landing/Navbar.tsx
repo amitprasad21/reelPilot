@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { Show, UserButton } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
-import { Menu, X } from "lucide-react"
+import { LayoutDashboard, Menu, X } from "lucide-react"
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -37,15 +38,27 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" size="sm">
-            Login
-          </Button>
-          <Button
-            size="sm"
-            className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-          >
-            Get Started
-          </Button>
+          <Show when="signed-out">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/sign-in">Login</Link>
+            </Button>
+            <Button
+              size="sm"
+              className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+              asChild
+            >
+              <Link href="/sign-up">Get Started</Link>
+            </Button>
+          </Show>
+          <Show when="signed-in">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/dashboard" className="gap-1.5">
+                <LayoutDashboard className="size-4" />
+                Dashboard
+              </Link>
+            </Button>
+            <UserButton />
+          </Show>
         </div>
 
         <button
@@ -72,15 +85,23 @@ export function Navbar() {
             ))}
           </nav>
           <div className="mt-4 flex flex-col gap-2">
-            <Button variant="ghost" size="sm" className="w-full">
-              Login
-            </Button>
-            <Button
-              size="sm"
-              className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              Get Started
-            </Button>
+            <Show when="signed-out">
+              <Button variant="ghost" size="sm" className="w-full" asChild>
+                <Link href="/sign-in" onClick={() => setMobileOpen(false)}>Login</Link>
+              </Button>
+              <Button
+                size="sm"
+                className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                asChild
+              >
+                <Link href="/sign-up" onClick={() => setMobileOpen(false)}>Get Started</Link>
+              </Button>
+            </Show>
+            <Show when="signed-in">
+              <div className="flex justify-center">
+                <UserButton />
+              </div>
+            </Show>
           </div>
         </div>
       )}

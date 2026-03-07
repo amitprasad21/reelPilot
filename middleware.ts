@@ -1,21 +1,24 @@
-import { type NextRequest } from "next/server"
-import { updateSession } from "@/lib/supabase/middleware"
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
 
-export async function middleware(request: NextRequest) {
-  return await updateSession(request)
-}
+// Routes that are accessible without being signed in
+const isPublicRoute = createRouteMatcher([
+  "/",            // landing page
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/api/health",
+])
+
+export default clerkMiddleware(async (auth, request) => {
+  if (!isPublicRoute(request)) {
+    await auth.protect()
+  }
+})
 
 export const config = {
   matcher: [
-    /*
-     * Match every request path EXCEPT:
-     *  - _next/static  (static files)
-     *  - _next/image   (image optimisation)
-     *  - favicon.ico, sitemap.xml, robots.txt
-     *
-     * This ensures the Supabase session is refreshed on every navigation
-     * without adding overhead to purely static assets.
-     */
+    // Skip Next.js internals and static files
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
   ],
 }
