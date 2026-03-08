@@ -1,7 +1,24 @@
+"use client"
+
+import { useAuth, useClerk } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Play } from "lucide-react"
+import { ArrowRight, LayoutDashboard, Play } from "lucide-react"
 
 export function Hero() {
+  const { userId, isLoaded } = useAuth()
+  const { openSignIn } = useClerk()
+  const router = useRouter()
+
+  const handleCTA = () => {
+    if (!isLoaded) return
+    if (userId) {
+      router.push("/dashboard")
+    } else {
+      openSignIn({ fallbackRedirectUrl: "/dashboard" })
+    }
+  }
+
   return (
     <section className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -31,10 +48,20 @@ export function Hero() {
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <Button
               size="lg"
+              onClick={handleCTA}
               className="gap-2 bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
-              Start Creating Videos
-              <ArrowRight className="size-4" />
+              {userId ? (
+                <>
+                  <LayoutDashboard className="size-4" />
+                  Go to Dashboard
+                </>
+              ) : (
+                <>
+                  Start Creating Videos
+                  <ArrowRight className="size-4" />
+                </>
+              )}
             </Button>
             <Button variant="outline" size="lg" className="gap-2">
               <Play className="size-4" />
