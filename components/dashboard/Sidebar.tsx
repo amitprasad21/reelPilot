@@ -28,9 +28,9 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
+    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-border bg-background">
       {/* Sidebar Header — Logo + App Name */}
-      <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-5">
+      <div className="flex h-16 items-center gap-3 border-b border-border px-5">
         <Image
           src="/logo.png"
           alt="VidMaxx logo"
@@ -38,7 +38,7 @@ export function Sidebar() {
           height={32}
           className="rounded-lg object-contain"
         />
-        <span className="text-lg font-bold tracking-tight text-slate-900">
+        <span className="text-lg font-bold tracking-tight text-foreground">
           ReelPilot
         </span>
       </div>
@@ -50,7 +50,7 @@ export function Sidebar() {
           className="w-full gap-2 bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700"
           size="default"
         >
-          <Link href="/dashboard/series/new">
+          <Link href="/dashboard/create">
             <Plus className="size-4" />
             Create New Series
           </Link>
@@ -69,14 +69,14 @@ export function Sidebar() {
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors",
                     active
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
                   )}
                 >
                   <Icon
                     className={cn(
                       "size-[18px] shrink-0",
-                      active ? "text-blue-600" : "text-slate-400"
+                      active ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"
                     )}
                   />
                   {label}
@@ -88,19 +88,19 @@ export function Sidebar() {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="border-t border-slate-200 px-3 py-4 space-y-0.5">
+      <div className="border-t border-border px-3 py-4 space-y-0.5">
         <Link
           href="/dashboard/billing/upgrade"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-amber-600 transition-colors hover:bg-amber-50"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-amber-600 transition-colors hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950"
         >
-          <Zap className="size-[18px] shrink-0 text-amber-500" />
+          <Zap className="size-[18px] shrink-0 text-amber-500 dark:text-amber-400" />
           Upgrade Plan
         </Link>
         <Link
           href="/dashboard/settings/profile"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
-          <User className="size-[18px] shrink-0 text-slate-400" />
+          <User className="size-[18px] shrink-0 text-muted-foreground" />
           Profile Settings
         </Link>
       </div>
