@@ -164,6 +164,44 @@ export interface Database {
         ]
       }
 
+      // ── Video Series (Scheduling) ────────────────────────────────────────
+      video_series: {
+        Row: {
+          id: string
+          user_id: string
+          series_name: string
+          video_duration: string
+          platforms: string[]
+          publish_at: string | null
+          generate_at: string | null
+          repeat_type: "once" | "weekly"
+          repeat_days: string[]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          series_name: string
+          video_duration: string
+          platforms?: string[]
+          publish_at?: string | null
+          generate_at?: string | null
+          repeat_type?: "once" | "weekly"
+          repeat_days?: string[]
+          created_at?: string
+        }
+        Update: {
+          series_name?: string
+          video_duration?: string
+          platforms?: string[]
+          publish_at?: string | null
+          generate_at?: string | null
+          repeat_type?: "once" | "weekly"
+          repeat_days?: string[]
+        }
+        Relationships: []
+      }
+
       // ── Scenes ─────────────────────────────────────────────────────────────
       scenes: {
         Row: {
