@@ -6,6 +6,12 @@ import { auth } from "@clerk/nextjs/server"
 interface ScheduleSeriesInput {
   seriesName: string
   videoDuration: string
+  niche: string
+  language: string
+  voiceId: string
+  bgTracks: string[]
+  videoStyle: string
+  captionStyle: string
   platforms: string[]
   repeatType: "once" | "weekly"
   publishDate: string | null // ISO string
@@ -37,6 +43,12 @@ export async function scheduleSeries(input: ScheduleSeriesInput) {
     user_id: userId,
     series_name: input.seriesName,
     video_duration: input.videoDuration,
+    niche: input.niche,
+    language: input.language,
+    voice_id: input.voiceId,
+    bg_tracks: input.bgTracks,
+    video_style: input.videoStyle,
+    caption_style: input.captionStyle,
     platforms: input.platforms,
     publish_at: publishAt?.toISOString() ?? null,
     generate_at: generateAt?.toISOString() ?? null,
