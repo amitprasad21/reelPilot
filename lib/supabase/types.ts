@@ -171,11 +171,18 @@ export interface Database {
           user_id: string
           series_name: string
           video_duration: string
+          niche: string | null
+          language: string | null
+          voice_id: string | null
+          bg_tracks: string[]
+          video_style: string | null
+          caption_style: string | null
           platforms: string[]
           publish_at: string | null
           generate_at: string | null
           repeat_type: "once" | "weekly"
           repeat_days: string[]
+          status: "active" | "paused"
           created_at: string
         }
         Insert: {
@@ -183,21 +190,35 @@ export interface Database {
           user_id: string
           series_name: string
           video_duration: string
+          niche?: string | null
+          language?: string | null
+          voice_id?: string | null
+          bg_tracks?: string[]
+          video_style?: string | null
+          caption_style?: string | null
           platforms?: string[]
           publish_at?: string | null
           generate_at?: string | null
           repeat_type?: "once" | "weekly"
           repeat_days?: string[]
+          status?: "active" | "paused"
           created_at?: string
         }
         Update: {
           series_name?: string
           video_duration?: string
+          niche?: string | null
+          language?: string | null
+          voice_id?: string | null
+          bg_tracks?: string[]
+          video_style?: string | null
+          caption_style?: string | null
           platforms?: string[]
           publish_at?: string | null
           generate_at?: string | null
           repeat_type?: "once" | "weekly"
           repeat_days?: string[]
+          status?: "active" | "paused"
         }
         Relationships: []
       }

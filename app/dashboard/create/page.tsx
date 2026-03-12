@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { StepperProgress } from "@/components/create/StepperProgress"
 import { NicheSelection } from "@/components/create/NicheSelection"
 import { LanguageVoiceSelection } from "@/components/create/LanguageVoiceSelection"
@@ -9,14 +9,19 @@ import { BackgroundMusicSelection } from "@/components/create/BackgroundMusicSel
 import { VideoStyleSelection } from "@/components/create/VideoStyleSelection"
 import { CaptionStyleSelection } from "@/components/create/CaptionStyleSelection"
 import { ScheduleStep, type ScheduleDetails } from "@/components/create/steps/ScheduleStep"
-import { scheduleSeries } from "@/lib/actions/schedule-series"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import type { LanguageOption } from "@/lib/data/languages"
+import { Language } from "@/lib/data/languages"
 
 export default function CreatePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get("edit")
+  const isEditing = !!editId
+
   const [currentStep, setCurrentStep] = useState(1)
+  const [loadingEdit, setLoadingEdit] = useState(isEditing)
 
   // Step 1 state
   const [selectedNiche, setSelectedNiche] = useState<string | null>(null)
@@ -54,6 +59,92 @@ export default function CreatePage() {
     publishTime: "",
     repeatDays: [],
   })
+
+  const [submitting, setSubmitting] = useState(false)
+
+  // Fetch series data when editing
+  useEffect(() => {
+    if (!editId) return
+    async function fetchSeries() {
+      try {
+        const res = await fetch(`/api/series?id=${encodeURIComponent(editId!)}`)
+        if (!res.ok) {
+          router.push("/dashboard")
+          return
+        }
+        const series = await res.json()
+
+        // Pre-fill step 1
+        const knownNiches = [
+          "scary-stories", "motivational", "did-you-know", "history-stories",
+          "life-lessons", "mystery-unsolved", "finance-tips", "philosophy",
+          "true-crime", "sleep-stories",
+        ]
+        if (series.niche && knownNiches.includes(series.niche)) {
+          setSelectedNiche(series.niche)
+        } else if (series.niche) {
+          setCustomNiche(series.niche)
+        }
+
+        // Pre-fill step 2
+        if (series.language) {
+          const lang = Language.find((l) => l.modelLangCode === series.language)
+          if (lang) setSelectedLanguage(lang)
+
+          // Fetch voices for this language and pre-select the saved voice
+          if (series.voice_id) {
+            try {
+              const voiceRes = await fetch(
+                `/api/voices?language=${encodeURIComponent(series.language)}`
+              )
+              if (voiceRes.ok) {
+                const voices = await voiceRes.json()
+                const matchedVoice = voices.find(
+                  (v: { voice_id: string }) => v.voice_id === series.voice_id
+                )
+                if (matchedVoice) setSelectedVoice(matchedVoice)
+              }
+            } catch {
+              // Voice pre-fill failed, user can re-select
+            }
+          }
+        }
+
+        // Pre-fill step 3
+        if (series.bg_tracks?.length) {
+          setSelectedBgTracks(series.bg_tracks)
+        }
+
+        // Pre-fill step 4
+        if (series.video_style) {
+          setSelectedVideoStyle(series.video_style)
+        }
+
+        // Pre-fill step 5
+        if (series.caption_style) {
+          setSelectedCaptionStyle(series.caption_style)
+        }
+
+        // Pre-fill step 6
+        setScheduleDetails({
+          seriesName: series.series_name || "",
+          duration: series.video_duration || "",
+          platforms: series.platforms || [],
+          repeatType: series.repeat_type || "once",
+          publishDate: series.publish_at ? new Date(series.publish_at) : null,
+          publishTime: series.publish_at
+            ? new Date(series.publish_at).toTimeString().slice(0, 5)
+            : "",
+          repeatDays: series.repeat_days || [],
+        })
+      } catch {
+        router.push("/dashboard")
+      } finally {
+        setLoadingEdit(false)
+      }
+    }
+    fetchSeries()
+  }, [editId, router])
 
   function toggleBgTrack(trackId: string) {
     setSelectedBgTracks((prev) =>
@@ -94,22 +185,83 @@ export default function CreatePage() {
       : scheduleDetails.repeatDays.length > 0)
 
   async function handleSchedule() {
-    const result = await scheduleSeries({
-      seriesName: scheduleDetails.seriesName,
-      videoDuration: scheduleDetails.duration,
-      platforms: scheduleDetails.platforms,
-      repeatType: scheduleDetails.repeatType,
-      publishDate: scheduleDetails.publishDate?.toISOString() ?? null,
-      publishTime: scheduleDetails.publishTime,
-      repeatDays: scheduleDetails.repeatDays,
-    })
+    if (submitting) return
+    setSubmitting(true)
 
-    if (result.error) {
-      console.error("Schedule failed:", result.error)
+    try {
+      const payload = {
+        seriesName: scheduleDetails.seriesName,
+        videoDuration: scheduleDetails.duration,
+        niche: selectedNiche || customNiche,
+        language: selectedLanguage?.modelLangCode ?? "",
+        voiceId: selectedVoice?.voice_id ?? "",
+        bgTracks: selectedBgTracks,
+        videoStyle: selectedVideoStyle ?? "",
+        captionStyle: selectedCaptionStyle ?? "",
+        platforms: scheduleDetails.platforms,
+        repeatType: scheduleDetails.repeatType,
+        publishDate: scheduleDetails.publishDate?.toISOString() ?? null,
+        publishTime: scheduleDetails.publishTime,
+        repeatDays: scheduleDetails.repeatDays,
+      }
+
+      let res: Response
+
+      if (isEditing) {
+        // Build update body with snake_case keys for Supabase
+        let publishAt: string | null = null
+        let generateAt: string | null = null
+
+        if (scheduleDetails.repeatType === "once" && scheduleDetails.publishDate) {
+          const [hours, minutes] = scheduleDetails.publishTime.split(":").map(Number)
+          const pub = new Date(scheduleDetails.publishDate)
+          pub.setHours(hours, minutes, 0, 0)
+          publishAt = pub.toISOString()
+
+          const gen = new Date(pub)
+          gen.setHours(gen.getHours() - 4)
+          generateAt = gen.toISOString()
+        }
+
+        res = await fetch("/api/series", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editId,
+            series_name: payload.seriesName,
+            video_duration: payload.videoDuration,
+            niche: payload.niche || null,
+            language: payload.language || null,
+            voice_id: payload.voiceId || null,
+            bg_tracks: payload.bgTracks,
+            video_style: payload.videoStyle || null,
+            caption_style: payload.captionStyle || null,
+            platforms: payload.platforms,
+            publish_at: publishAt,
+            generate_at: generateAt,
+            repeat_type: payload.repeatType,
+            repeat_days: payload.repeatDays,
+          }),
+        })
+      } else {
+        res = await fetch("/api/series", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+      }
+
+    if (!res.ok) {
+      const err = await res.json()
+      console.error("Schedule failed:", err.error)
+      setSubmitting(false)
       return
     }
 
     router.push("/dashboard")
+    } catch {
+      setSubmitting(false)
+    }
   }
 
   function handleContinue() {
@@ -122,12 +274,22 @@ export default function CreatePage() {
     <div className="mx-auto max-w-2xl">
       {/* Page heading */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Create New Series</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          {isEditing ? "Edit Series" : "Create New Series"}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Follow the steps below to set up your AI-powered YouTube Shorts series.
+          {isEditing
+            ? "Update the settings for your video series."
+            : "Follow the steps below to set up your AI-powered YouTube Shorts series."}
         </p>
       </div>
 
+      {loadingEdit ? (
+        <div className="flex items-center justify-center rounded-2xl border border-border bg-card p-12">
+          <div className="text-sm text-muted-foreground">Loading series data…</div>
+        </div>
+      ) : (
+      <>
       {/* Stepper */}
       <div className="mb-8 rounded-2xl border border-border bg-card px-6 py-5 shadow-sm">
         <StepperProgress currentStep={currentStep} />
@@ -175,7 +337,9 @@ export default function CreatePage() {
             details={scheduleDetails}
             onChange={setScheduleDetails}
             onSchedule={handleSchedule}
-            canSchedule={canSchedule}
+            canSchedule={canSchedule && !submitting}
+            submitting={submitting}
+            isEditing={isEditing}
           />
         )}
 
@@ -202,6 +366,8 @@ export default function CreatePage() {
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

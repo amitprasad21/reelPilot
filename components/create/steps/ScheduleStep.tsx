@@ -55,6 +55,8 @@ interface ScheduleStepProps {
   onChange: (details: ScheduleDetails) => void
   onSchedule: () => void
   canSchedule: boolean
+  submitting?: boolean
+  isEditing?: boolean
 }
 
 export function ScheduleStep({
@@ -62,6 +64,8 @@ export function ScheduleStep({
   onChange,
   onSchedule,
   canSchedule,
+  submitting = false,
+  isEditing = false,
 }: ScheduleStepProps) {
   function update(partial: Partial<ScheduleDetails>) {
     onChange({ ...details, ...partial })
@@ -284,15 +288,17 @@ export function ScheduleStep({
       <button
         type="button"
         onClick={onSchedule}
-        disabled={!canSchedule}
+        disabled={!canSchedule || submitting}
         className={cn(
           "w-full rounded-lg py-3 text-sm font-semibold transition-all",
-          canSchedule
+          canSchedule && !submitting
             ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 dark:shadow-blue-900"
             : "bg-muted text-muted-foreground cursor-not-allowed"
         )}
       >
-        Schedule Series
+        {submitting
+          ? isEditing ? "Saving…" : "Scheduling…"
+          : isEditing ? "Save Changes" : "Schedule Series"}
       </button>
     </div>
   )
