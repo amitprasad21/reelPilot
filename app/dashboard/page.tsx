@@ -59,9 +59,27 @@ export default function DashboardPage() {
     router.push(`/dashboard/create?edit=${series.id}`)
   }
 
-  function handleGenerate(id: string) {
-    // Trigger video generation (placeholder — hook into generation pipeline)
-    console.log("Generate video for series:", id)
+  async function handleGenerate(id: string) {
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seriesId: id }),
+      })
+      if (res.ok) {
+        const data = (await res.json()) as { assetId?: string }
+        const qs = new URLSearchParams({ seriesId: id })
+        if (data.assetId) {
+          qs.set("assetId", data.assetId)
+        }
+        router.push(`/dashboard/videos?${qs.toString()}`)
+      } else {
+        const err = await res.json()
+        console.error("Generate failed:", err.error)
+      }
+    } catch (err) {
+      console.error("Generate failed:", err)
+    }
   }
 
   if (loading) {

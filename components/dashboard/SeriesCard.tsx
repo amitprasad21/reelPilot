@@ -155,7 +155,7 @@ export function SeriesCard({
             className="flex-1 gap-1.5 text-xs"
             asChild
           >
-            <Link href={`/dashboard/series/${series.id}/videos`}>
+            <Link href={`/dashboard/videos?seriesId=${encodeURIComponent(series.id)}`}>
               <Video className="size-3.5" />
               Videos
             </Link>
