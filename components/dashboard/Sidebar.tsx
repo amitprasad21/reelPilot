@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
-  { label: "Series", href: "/dashboard/series", icon: Layers },
+  { label: "Series", href: "/dashboard", icon: Layers },
   { label: "Videos", href: "/dashboard/videos", icon: Clapperboard },
   { label: "Guides", href: "/dashboard/guides", icon: BookOpen },
   { label: "Billing", href: "/dashboard/billing", icon: CreditCard },

@@ -223,6 +223,73 @@ export interface Database {
         Relationships: []
       }
 
+      // ── Generated Video Assets ────────────────────────────────────────────
+      generated_video_assets: {
+        Row: {
+          id: string
+          series_id: string
+          user_id: string
+          title: string
+          script: string | null
+          duration_target: string | null
+          voice_provider: string | null
+          voice_id: string | null
+          voiceover_url: string | null
+          voiceover_storage_path: string | null
+          transcript: string | null
+          captions_json: Json
+          scenes_json: Json
+          images_json: Json
+          status: "pending" | "completed" | "failed"
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          series_id: string
+          user_id: string
+          title: string
+          script?: string | null
+          duration_target?: string | null
+          voice_provider?: string | null
+          voice_id?: string | null
+          voiceover_url?: string | null
+          voiceover_storage_path?: string | null
+          transcript?: string | null
+          captions_json?: Json
+          scenes_json?: Json
+          images_json?: Json
+          status?: "pending" | "completed" | "failed"
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          series_id?: string
+          user_id?: string
+          title?: string
+          script?: string | null
+          duration_target?: string | null
+          voice_provider?: string | null
+          voice_id?: string | null
+          voiceover_url?: string | null
+          voiceover_storage_path?: string | null
+          transcript?: string | null
+          captions_json?: Json
+          scenes_json?: Json
+          images_json?: Json
+          status?: "pending" | "completed" | "failed"
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_video_assets_series_id_fkey"
+            columns: ["series_id"]
+            referencedRelation: "video_series"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
       // ── Scenes ─────────────────────────────────────────────────────────────
       scenes: {
         Row: {
